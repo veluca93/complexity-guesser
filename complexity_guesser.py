@@ -6,7 +6,7 @@ def poly(val, deg):
     return val**deg
 
 def polylog(val, deg):
-    return math.log(val)**deg
+    return math.log(1+val)**deg
 
 def mean(l):
     return sum(l)/len(l)
@@ -40,24 +40,24 @@ def getcoeff(function, data):
     return (a, b, err)
 
 def guess(varnames, data):
+    data = dict(data).items()
+    data.sort()
     function = []
     for i in varnames:
         tmp = dict()
         tmp[poly] = 1
         tmp[polylog] = 0
         function.append(tmp)
-    data = dict(data).items()
-    data.sort()
     steps = []
     for i in range(len(varnames)):
         steps.append((i, poly, 1))
         steps.append((i, poly, -1))
-    for i in range(len(varnames)):
-        steps.append((i, poly, 0.5))
-        steps.append((i, poly, 0.5))
-    for i in range(len(varnames)):
-        steps.append((i, poly, 1./3))
-        steps.append((i, poly, 1./3))
+#    for i in range(len(varnames)):
+#        steps.append((i, poly, 0.5))
+#        steps.append((i, poly, 0.5))
+#    for i in range(len(varnames)):
+#        steps.append((i, poly, 1./3))
+#        steps.append((i, poly, 1./3))
     for i in range(len(varnames)):
         steps.append((i, polylog, 1))
         steps.append((i, polylog, -1))
