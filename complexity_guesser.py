@@ -83,6 +83,7 @@ def guess(varnames, data):
                 desc += "%s " % varnames[i]
             elif function[i][poly] != 0:
                 desc += "%s^%s " % (varnames[i], function[i][poly])
+        for i in xrange(len(function)):
             if function[i][polylog] == 1:
                 desc += "log %s " % varnames[i]
             elif function[i][polylog] != 0:
