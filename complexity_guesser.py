@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import math
+import random
 
 def poly(val, deg):
     return val**deg
@@ -28,15 +29,11 @@ def getdim(variables, function):
     return val
 
 def getcoeff(function, data):
-    dims = [getdim(i[0], function) for i in data]
-    times = [i[1] for i in data]
-    if cov(dims, dims) == 0:
-        b = 0
-        a = sum(times)/sum(dims)
-    else:
-        b = cov(dims, times) / cov(dims, dims)
-        a = mean(times) - b * mean(dims)
-    err = abs((times[0] - (a*dims[0]+b))/dims[0])
+    dims = [getdim(i[0], function) for i in data if i[1] > 0]
+    times = [i[1] for i in data if i[1] > 0]
+    b = 0
+    a = 1./mean([dims[i]/times[i] for i in xrange(len(times))])
+    err = mean([(1 - a*dims[i]/times[i])**2 for i in xrange(len(times))])
     return (a, b, err)
 
 def guess(varnames, data):
@@ -48,32 +45,29 @@ def guess(varnames, data):
         tmp[poly] = 1
         tmp[polylog] = 0
         function.append(tmp)
-    steps = []
-    for i in range(len(varnames)):
-        steps.append((i, poly, 1))
-        steps.append((i, poly, -1))
-#    for i in range(len(varnames)):
-#        steps.append((i, poly, 0.5))
-#        steps.append((i, poly, 0.5))
-#    for i in range(len(varnames)):
-#        steps.append((i, poly, 1./3))
-#        steps.append((i, poly, 1./3))
-    for i in range(len(varnames)):
-        steps.append((i, polylog, 1))
-        steps.append((i, polylog, -1))
-    while True:
+    nit = 10000
+    def tfun(t):
+        return (float(nit-t)/nit)**3
+    for t in xrange(nit):
+        temp = tfun(t) * 0.0001
         err = getcoeff(function, data)[2]
-        improved = False
-        for step in steps:
-            function[step[0]][step[1]] += step[2]
-            errn = getcoeff(function, data)[2]
-            if errn < err:
-                improved = True
-                continue
-            function[step[0]][step[1]] -= step[2]
-        if improved:
-            continue
-        break
+        step = []
+        for i in varnames:
+            a = random.uniform(-1, 1) * tfun(t)
+            b = random.uniform(-1, 1) * tfun(t)
+            step.append([a, b])
+        for i in xrange(len(varnames)):
+            function[i][poly] += step[i][0]
+            function[i][polylog] += step[i][1]
+        errn = getcoeff(function, data)[2]
+        if -(errn - err)/temp < math.log(random.random()):
+            for i in xrange(len(varnames)):
+                function[i][poly] -= step[i][0]
+                function[i][polylog] -= step[i][1]
+    info = getcoeff(function, data)
+    for i in xrange(len(varnames)):
+        function[i][poly] = round(function[i][poly]*10)/10
+        function[i][polylog] = round(function[i][polylog]*10)/10
     if sum(fn != {poly: 0, polylog: 0} for fn in function) == 0:
         desc = "O(1)"
     else:
@@ -82,12 +76,11 @@ def guess(varnames, data):
             if function[i][poly] == 1:
                 desc += "%s " % varnames[i]
             elif function[i][poly] != 0:
-                desc += "%s^%s " % (varnames[i], function[i][poly])
+                desc += "%s^%.1f " % (varnames[i], function[i][poly])
         for i in xrange(len(function)):
             if function[i][polylog] == 1:
                 desc += "log %s " % varnames[i]
             elif function[i][polylog] != 0:
-                desc += "log^%s %s " % (function[i][polylog], varnames[i])
+                desc += "log^%.1f %s " % (function[i][polylog], varnames[i])
         desc = desc.strip() + ")"
-    info = getcoeff(function, data)
-    return "%s with coefficient %f and error %f" % (desc, info[0], info[2])
+    return "%s with coefficient %f and error %s" % (desc, info[0], info[2])
