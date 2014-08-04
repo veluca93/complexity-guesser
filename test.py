@@ -22,7 +22,7 @@ sizes = [map(int, l.split()) for l in lines[1:]]
 varnames = lines[0].strip().split()
 
 lines = open(sys.argv[2]).readlines()
-data = [(sizes[i], float(lines[i])) for i in xrange(len(lines))
+data = [(tuple(sizes[i]), float(lines[i])) for i in xrange(len(lines))
         if isfloat(lines[i])]
 
 print complexity_guesser.guess(varnames, data)
