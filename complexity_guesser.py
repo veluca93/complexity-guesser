@@ -2,6 +2,7 @@
 
 import math
 import random
+import operator
 
 def poly(val, deg):
     return val**deg
@@ -11,6 +12,9 @@ def polylog(val, deg):
 
 def mean(l):
     return sum(l)/len(l)
+
+def gmean(l):
+    return reduce(operator.mul, l, 1)**(1./len(l))
 
 def cov(l1, l2):
     m1 = mean(l1)
@@ -31,9 +35,11 @@ def getdim(variables, function):
 def getcoeff(function, data):
     dims = [getdim(i[0], function) for i in data if i[1] > 0]
     times = [i[1] for i in data if i[1] > 0]
+    idx = xrange(len(times))
     b = 0
-    a = 1./mean([dims[i]/times[i] for i in xrange(len(times))])
-    err = mean([(1 - a*dims[i]/times[i])**2 for i in xrange(len(times))])
+    a = mean([dims[i]/times[i] for i in idx]) / \
+        mean([(dims[i]/times[i])**2 for i in idx])
+    err = mean([(a*dims[i]/times[i]-1)**2 for i in idx])
     return (a, b, err)
 
 def guess(varnames, data):
